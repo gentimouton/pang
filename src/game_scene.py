@@ -9,7 +9,10 @@ from pview import T
 import pview
 import pygame as pg
 from scene import Scene
-from constants import BTN_DOWN, BTN_UP
+from constants import BTN_DOWN1, BTN_UP1, BTN_UP2, BTN_DOWN2
+
+PADW, PADH = 10, 100
+WALW, WALH = 700, 10
 
 
 class GameScene(Scene):
@@ -20,22 +23,35 @@ class GameScene(Scene):
         
     def tick(self, ms):
         """ process player inputs and move ball """
-        if controller.btn_event(BTN_UP):
-            self.paddle1.move_ip(0,-20)
-        if controller.btn_event(BTN_DOWN):
-            self.paddle1.move_ip(0,20)
+        # paddle 1
+        p1, p2 = self.paddle1, self.paddle2
+        if controller.btn_ispressed(BTN_UP1) and p1.y >= WALH:
+            p1.move_ip(0, -20)
+        elif controller.btn_ispressed(BTN_DOWN1) and p1.y + PADH + WALH < 600:
+            p1.move_ip(0, 20)
+        # paddle 2
+        if controller.btn_ispressed(BTN_UP2) and p2.y >= WALH:
+            p2.move_ip(0, -20)
+        elif controller.btn_ispressed(BTN_DOWN2) and p2.y + PADH + WALH < 600:
+            p2.move_ip(0, 20)
+                
+        # ball
+        ball = self.ball
+        ball.move_ip(self.ball_speed)
+        # hit a paddle
+        if ball.collidelist([p1, p2]) != -1:
+            dx, dy = self.ball_speed
+            self.ball_speed = [-1.1 * dx, 1.1 * dy]
             
-        # move ball
-        self.ball.move_ip(self.ball_speed)
         # goal!
-        if self.ball.x <= 10 or self.ball.x >= 770:
+        if ball.x <= 10 or ball.x >= 770:
             self._build_new_game()
             
         # bounce on walls
-        if self.ball.collidelist(self.walls) != -1:
+        if ball.collidelist(self.walls) != -1:
             dx, dy = self.ball_speed
             self.ball_speed = [dx, -dy]
-            self.ball.move_ip(0, -dy)
+            ball.move_ip(0, -dy)
         
         self._draw()
         return None, {}
@@ -74,8 +90,8 @@ if __name__ == "__main__":
     clock = pg.time.Clock()
     scene = GameScene()
     while True:
-        ms = clock.tick(10)
-        outcome = controller.poll() # get player input
+        ms = clock.tick(20)
+        outcome = controller.poll()  # get player input
         if outcome == OUT_QUIT:
             break
         elif outcome == OUT_FSCR:

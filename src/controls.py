@@ -11,7 +11,7 @@ class Controller():
         """ 
         toggle fullscreen with F11, 
         quit with ESC or alt-F4. 
-        returns whether the program should stop 
+        returns an outcome defined in constants. 
         """
         kmap = settings.kmap
         valid_keys = settings.kmap.keys()
